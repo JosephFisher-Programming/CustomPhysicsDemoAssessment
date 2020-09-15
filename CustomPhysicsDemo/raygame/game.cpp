@@ -75,11 +75,25 @@ bool game::tick()
 	{
 		auto cursorPos = GetMousePosition();
 
-		physObject baby;
+		physObject baby(10.0f, true);
 		baby.pos = { cursorPos.x, cursorPos.y };
 		baby.mass = (rand() % 10) + 1;
 		baby.shape.circleData.radius = baby.mass;
-		baby.addImpulse({ 100,0 });
+		baby.addImpulse({ 0,0 });
+
+		physObjects.push_back(baby);
+	}
+
+	if (IsKeyPressed(KEY_Q))
+	{
+		auto cursorPos = GetMousePosition();
+
+		physObject baby(5.0f, 5.0f, true);
+		baby.pos = { cursorPos.x, cursorPos.y };
+		baby.mass = (rand() % 10) + 1;
+		baby.shape.boxData.width *= baby.mass;
+		baby.shape.boxData.height *= baby.mass;
+		baby.addImpulse({ 200,0 });
 
 		physObjects.push_back(baby);
 	}
@@ -93,12 +107,16 @@ void game::tickPhysics()
 {
 	accumulatedDeltaTime -= fixedTimeStep;
 
-	//  TODO:  add gravity for all physics objects
-
 	//  test for collision
 	//  TODO: optimize with spatial partitioning (octrees?)
 	for (auto& lhs : physObjects)
 	{
+		//  add gravity to all physObjects
+		if (lhs.isGravity) 
+		{
+			lhs.addAccel({ 0,20 * lhs.mass});
+		}
+
 		for (auto& rhs : physObjects)
 		{
 			//  skip ourselves
@@ -144,6 +162,22 @@ void game::tickPhysics()
 				first->vel = recImpulses[0];
 				second->vel = recImpulses[1];
 			}
+		}
+		if (lhs.pos.x > 850) 
+		{
+			lhs.pos.x = 0;
+		}
+		if (lhs.pos.x < 0)
+		{
+			lhs.pos.x = 850;
+		}
+		if (lhs.pos.y > 450)
+		{
+			lhs.pos.y = 0;
+		}
+		if (lhs.pos.y < 0)
+		{
+			lhs.pos.y = 450;
 		}
 	}
 

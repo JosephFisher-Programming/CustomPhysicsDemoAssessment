@@ -19,10 +19,19 @@ public:
 	//  mass
 	float mass;
 
+	//  isGravity
+	bool isGravity;
+
 	collider shape;
 
-	//  constructer (defaults)
+	//  constructor (default basic circle)
 	physObject();
+
+	//  constructor (default basic circle)
+	physObject(float, bool);
+
+	//  constructor (no Gravity)
+	physObject(float, float, bool);
 	
 	//  tickPhysics
 	void tickPhysics(float deltaTime);

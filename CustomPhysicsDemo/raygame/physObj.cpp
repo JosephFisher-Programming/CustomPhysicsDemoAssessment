@@ -5,11 +5,36 @@
 physObject::physObject()
 {
 	pos = glm::vec2(0, 0);
-	vel = glm::vec2(100, 0);
+	vel = glm::vec2(0, 0);
 	forces = glm::vec2(0, 0);
+	isGravity = true;
 
 	mass = 1.0f;
 	shape = { shapeType::CIRCLE, circle{10.0f} };
+}
+
+physObject::physObject(float radiusInput, bool gravity)
+{
+	pos = glm::vec2(0, 0);
+	vel = glm::vec2(0, 0);
+	forces = glm::vec2(0, 0);
+	isGravity = gravity;
+
+	mass = 1.0f;
+	shape = { shapeType::CIRCLE, circle{radiusInput} };
+}
+
+physObject::physObject(float widthInput, float heightInput, bool gravity)
+{
+	pos = glm::vec2(0, 0);
+	vel = glm::vec2(0, 0);
+	forces = glm::vec2(0, 0);
+	isGravity = gravity;
+
+	mass = 1.0f;
+	shape = { shapeType::AABB };
+	shape.boxData.width = widthInput;
+	shape.boxData.height = heightInput;
 }
 
 void physObject::tickPhysics(float deltaTime) 
@@ -33,7 +58,7 @@ void physObject::draw() const
 	case shapeType::CIRCLE:
 		DrawCircleLines((int)pos.x, (int)pos.y, shape.circleData.radius, GREEN);
 	case shapeType::AABB:
-		//assert(false && "AABB not yet implemented -- cannot draw");
+		DrawRectangle((int)pos.x, (int)pos.y, (int)shape.boxData.width, (int)shape.boxData.height, PURPLE);
 	default:
 		break;
 	}
