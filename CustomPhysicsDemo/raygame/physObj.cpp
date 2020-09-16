@@ -39,12 +39,30 @@ physObject::physObject(float widthInput, float heightInput, bool gravity)
 
 void physObject::tickPhysics(float deltaTime) 
 {
+	if (pos.x <= 425 && pos.y >= 225)
+	{
+		quadrantValue = 0;
+	}
+	else if (pos.x <= 425 && pos.y < 225)
+	{
+		quadrantValue = 1;
+	}
+	else if (pos.x > 425 && pos.y < 225)
+	{
+		quadrantValue = 2;
+	}
+	else 
+	{
+		quadrantValue = 3;
+	}
+
 	//  integrate forces into velocity
 	vel += forces * deltaTime;
 	forces = { 0,0 };
 
-	//  TODO: insert some linear drag
-
+	//  add drag.
+	vel -= glm::vec2{ 10, 10 } *deltaTime;
+	
 	//  integrate velocity into position
 	pos += vel * deltaTime;
 }

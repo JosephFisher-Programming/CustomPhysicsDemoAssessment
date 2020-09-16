@@ -17,9 +17,8 @@ collisionMap setupCollisionChecks()
 	collisionMap map;
 
 	map[static_cast<collisionPair>(shapeType::CIRCLE | shapeType::CIRCLE)] = checkCircleCircle;
-
-	//  TODO: add CIRCLE - AABB check
-	//  TODO: add AABB - AABB check
+	map[static_cast<collisionPair>(shapeType::AABB | shapeType::CIRCLE)] = checkAABBCircle;
+	map[static_cast<collisionPair>(shapeType::AABB | shapeType::AABB)] = checkAABBAABB;
 
 	return map;
 }
@@ -29,9 +28,8 @@ depenetrationMap setupDepenetrationFunc()
 	depenetrationMap map;
 
 	map[(collisionPair)(shapeType::CIRCLE | shapeType::CIRCLE)] = gatherCollisionDataCircleCircle;
-
-	//  TODO: add CIRCLE-AABB depen
-	//  TODO: add AABB-AABB depen
+	map[(collisionPair)(shapeType::AABB | shapeType::CIRCLE)] = gatherCollisionDataAABBCircle;
+	map[(collisionPair)(shapeType::AABB | shapeType::AABB)] = gatherCollisionDataAABBAABB;
 
 	return map;
 }
@@ -75,7 +73,7 @@ bool game::tick()
 	{
 		auto cursorPos = GetMousePosition();
 
-		physObject baby(10.0f, true);
+		physObject baby(10.0f, false);
 		baby.pos = { cursorPos.x, cursorPos.y };
 		baby.mass = (rand() % 10) + 1;
 		baby.shape.circleData.radius = baby.mass;
@@ -98,8 +96,23 @@ bool game::tick()
 		physObjects.push_back(baby);
 	}
 
-	//  TODO: right-click and push all of the nearby particles within a radius
+	if(IsMouseButtonPressed(1))
+	{
+		auto cursorPos = GetMousePosition();
 
+		for (auto& targets : physObjects)
+		{
+			//  check the distance between the mouse cursor and the object
+			if (glm::distance(glm::vec2{ cursorPos.x, cursorPos.y }, targets.pos) < 50)
+			{
+				//  Push the objects away from the mouse
+				glm::vec2 direction = glm::normalize(glm::vec2{ targets.pos.x - cursorPos.x , targets.pos.y - cursorPos.y });
+				direction.x *= 30;
+				direction.y *= 30;
+				targets.addImpulse(direction);
+			}
+		}
+	}
 	return !WindowShouldClose();
 }
 
@@ -108,7 +121,6 @@ void game::tickPhysics()
 	accumulatedDeltaTime -= fixedTimeStep;
 
 	//  test for collision
-	//  TODO: optimize with spatial partitioning (octrees?)
 	for (auto& lhs : physObjects)
 	{
 		//  add gravity to all physObjects
@@ -120,7 +132,7 @@ void game::tickPhysics()
 		for (auto& rhs : physObjects)
 		{
 			//  skip ourselves
-			if (&lhs == &rhs) { continue; }
+			if (&lhs == &rhs  || lhs.quadrantValue != rhs.quadrantValue) { continue; }
 
 			auto *first = &lhs;
 			auto *second = &rhs;
@@ -185,8 +197,6 @@ void game::tickPhysics()
 	{
 		obj.tickPhysics(fixedTimeStep);
 	}
-
-	//  TODO:  wrap the objects around the level
 }
 
 bool game::shouldTickPhysics() const

@@ -21,12 +21,23 @@ bool checkCircleCircle(glm::vec2 posA, collider circleA, glm::vec2 posB, collide
 
 bool checkAABBCircle(glm::vec2 posA, AABB boxA, glm::vec2 posB, circle circle)
 {
-	return false;
+	//  get the disttance between the two shapes
+	float distance = glm::length(posA - posB);
+
+	//  get the sum of the radius and hypotenuse
+	float sum = circle.radius + sqrt(boxA.width * boxA.width + boxA.height * boxA.height);
+
+	//  return distance < sum
+	return (posA.x + boxA.width / 2 > posB.x - circle.radius &&
+			posA.x - boxA.width / 2 < posB.x + circle.radius &&
+			posA.y + boxA.height / 2 > posB.y - circle.radius &&
+			posA.y - boxA.height / 2 < posB.y + circle.radius && 
+			distance < sum);
 }
 
 bool checkAABBCircle(glm::vec2 posA, collider boxA, glm::vec2 posB, collider circle)
 {
-	return false;
+	return checkAABBCircle(posA, boxA.boxData, posB, circle.circleData);
 }
 
 bool checkAABBAABB(glm::vec2 posA, AABB boxA, glm::vec2 posB, AABB boxB)
@@ -64,22 +75,54 @@ glm::vec2 gatherCollisionDataCircleCircle(glm::vec2 posA, collider circleA, glm:
 
 glm::vec2 gatherCollisionDataAABBCircle(glm::vec2 posA, AABB box, glm::vec2 posB, circle circle, float & pen)
 {
-	return glm::vec2();
+	//  calculate their distance
+	float dist = glm::length(posA - posB);
+
+	//  check the penetration level and move it based on the most penetrated side
+	if (posA.x + box.width / 2 - posB.x - circle.radius / 2 > posA.y + box.height / 2 - posB.y - circle.radius / 2)
+	{
+		float sum = box.width / 2 + circle.radius;
+		pen = sum - dist;
+	}
+	else
+	{
+		float sum = box.height / 2 + circle.radius;
+		pen = sum - dist;
+	}
+
+	//  get the normalized vector between the two
+	return glm::normalize(posA - posB);
 }
 
 glm::vec2 gatherCollisionDataAABBCircle(glm::vec2 posA, collider box, glm::vec2 posB, collider circle, float & pen)
 {
-	return glm::vec2();
+	return gatherCollisionDataAABBCircle(posA, box.boxData, posB, circle.circleData, pen);
 }
 
 glm::vec2 gatherCollisionDataAABBAABB(glm::vec2 posA, AABB boxA, glm::vec2 posB, AABB boxB, float & pen)
 {
-	return glm::vec2();
+	//  calculate their distance
+	float dist = glm::length(posA - posB);
+
+	//  check the penetration level and move it based on the most penetrated side
+	if (posA.x + boxA.width / 2 - posB.x - boxB.width / 2 > posA.y + boxA.height / 2 - posB.y - boxB.height / 2) 
+	{
+		float sum = (boxA.width + boxB.width) / 2;
+		pen = sum - dist;
+	}
+	else 
+	{
+		float sum = (boxA.height + boxB.height) / 2;
+		pen = sum - dist;
+	}
+
+	//  get the normalized vector between the two
+	return glm::normalize(posA - posB);
 }
 
 glm::vec2 gatherCollisionDataAABBAABB(glm::vec2 posA, collider boxA, glm::vec2 posB, collider boxB, float & pen)
 {
-	return glm::vec2();
+	return gatherCollisionDataAABBAABB(posA, boxA.boxData, posB, boxB.boxData, pen);
 }
 
 void resolveCollision(glm::vec2 posA, glm::vec2 velA, float massA, 

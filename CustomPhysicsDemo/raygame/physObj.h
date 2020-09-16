@@ -24,6 +24,9 @@ public:
 
 	collider shape;
 
+	//  stores what quadrant the object is in
+	int quadrantValue;
+
 	//  constructor (default basic circle)
 	physObject();
 
